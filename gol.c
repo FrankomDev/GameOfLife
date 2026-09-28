@@ -5,23 +5,76 @@
 #define CELLS_Y 20
 
 #define TICKS 25000
+typedef enum {DEAD, ALIVE} CellStatus;
 
+void builder(CellStatus (*cells)[CELLS_X][CELLS_Y]) {
+    int key = 0;
+
+    struct {
+        int x;
+        int y;
+    } current_pos;
+    current_pos.x = 0;
+    current_pos.y = 0;
+
+    move(22, 0);
+    printw("SPACE - place/destroy, ENTER - run\n");
+
+    while (key != 10) {
+
+        switch (key) {
+            case KEY_UP:
+                if (current_pos.y > 0)
+                    current_pos.y--;
+                break;
+            case KEY_DOWN:
+                if (current_pos.y < CELLS_Y-1)
+                    current_pos.y++;
+                break;
+            case KEY_LEFT:
+                if (current_pos.x > 0)
+                    current_pos.x--;
+                break;
+            case KEY_RIGHT:
+                if (current_pos.x < CELLS_X-1)
+                    current_pos.x++;
+                break;
+            case 32:
+                move(current_pos.y, current_pos.x);
+                if ((*cells)[current_pos.x][current_pos.y] == DEAD) {
+                    printw("@");
+                    (*cells)[current_pos.x][current_pos.y] = ALIVE;
+                } else {
+                    printw(" ");
+                    (*cells)[current_pos.x][current_pos.y] = DEAD;
+                }
+            default: break;
+        }
+
+        move(current_pos.y, current_pos.x);
+
+        refresh();
+        key = getch();
+    }
+}
 
 int main() {
 
-    typedef enum {DEAD, ALIVE} CellStatus;
     CellStatus cells[CELLS_X][CELLS_Y] = {DEAD};
-    cells[8][8] = ALIVE;
-    cells[9][8] = ALIVE;
-    cells[10][8] = ALIVE;
-    cells[10][7] = ALIVE;
-    cells[10][6] = ALIVE;
-    cells[10][5] = ALIVE;
+    //cells[8][8] = ALIVE;
+    //cells[9][8] = ALIVE;
+    //cells[10][8] = ALIVE;
+    //cells[10][7] = ALIVE;
+    //cells[10][6] = ALIVE;
+    //cells[10][5] = ALIVE;
 
     initscr();
     noecho();
     start_color();
     init_pair(1, COLOR_RED, COLOR_BLACK);
+    keypad(stdscr, true);
+
+    builder(&cells);
 
     while (1) {
         static int tick = TICKS;
