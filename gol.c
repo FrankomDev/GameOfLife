@@ -17,8 +17,8 @@ void builder(CellStatus (*cells)[CELLS_X][CELLS_Y]) {
     current_pos.x = 0;
     current_pos.y = 0;
 
-    move(22, 0);
-    printw("SPACE - place/destroy, ENTER - run\n");
+    move(CELLS_Y+2, 0);
+    printw("ARROWS - move, SPACE - place/destroy, ENTER - run\n");
 
     while (key != 10) {
 
@@ -71,15 +71,22 @@ int main() {
     initscr();
     noecho();
     start_color();
-    init_pair(1, COLOR_RED, COLOR_BLACK);
+    //init_pair(1, COLOR_RED, COLOR_BLACK);
     keypad(stdscr, true);
 
     builder(&cells);
+    nodelay(stdscr, true);
 
+    struct {
+        bool paused;
+        bool next;
+    } pause;
+    pause.paused = false;
+    pause.next = false;
     while (1) {
         static int tick = TICKS;
 
-        if (tick == TICKS) {
+        if (tick == TICKS || pause.next) {
             bool change[CELLS_X][CELLS_Y] = {false};
 
             for (int x=0; x<CELLS_X; x++) {
@@ -138,11 +145,31 @@ int main() {
             }
 
             tick = 0;
+            pause.next = false;
         }
-        tick++;
+        if (!pause.paused) {
+            tick++;
+        }
         refresh();
 
-        move(22, 0);
+        switch(getch()) {
+            case 32:
+                pause.paused = !pause.paused;
+                tick = 0;
+                break;
+            case 110:
+                if (pause.paused)
+                    pause.next = true;
+                break;
+            default: break;
+        }
+
+        move(CELLS_Y+2, 0);
+        if (!pause.paused)
+            printw("SPACE - pause\n");
+        else
+            printw("SPACE - unpause, N - next\n");
+        move(CELLS_Y+3, 0);
         printw("Ticks: %d\n", tick);
     }
 
